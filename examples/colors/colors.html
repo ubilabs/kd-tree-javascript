@@ -1,0 +1,93 @@
+<html>
+  <head>
+    <link rel='stylesheet' href='spectrum.css' />
+    <style>
+      #picked {
+        width: 50px;
+        height: 50px;
+        border: 1px solid #000;
+      }
+      #left {
+        float: left;
+      }
+      #results {
+        float: left;
+        margin-left: 10px;
+      }
+      body {
+        font-family: sans-serif;
+      }
+      li {
+        padding: 5px;
+      }
+      ul {
+        list-style: none;
+        padding-left: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="left">
+      <input type="text" id="picker"></input>
+      <br />
+      You picked: <div id="picked"></div>
+    </div>
+    <div id="results">Cool names: <ul></ul></div>
+    <script src="../jquery-1.7.2.min.js"></script>
+    <script src="../kdTree.min.js"></script>
+    <script src="colors.json"></script>
+    <script src="spectrum.js"></script>
+    <script>
+      var tree;
+      // Pretty good color distance from
+      // http://www.compuphase.com/cmetric.htm
+      function colorDistance(a, b) {
+        var dr = a.red - b.red;
+        var dg = a.green - b.green;
+        var db = a.blue - b.blue;
+        var redMean = (a.red + b.red)/2;
+        return (2+redMean/256)*dr*dr + 4*dg*dg + (2 + (255 - redMean)/256)*db*db;
+      }
+
+      function update(color) {
+        $("#picked").css('background', color.toHex());
+        var rgb = color.toRgb();
+        var search = {red: rgb.r, green: rgb.g, blue: rgb.b};
+        var nearest = tree.nearest(search, 10);
+        nearest.sort(function(a,b){return a[1] - b[1]});
+
+        var $list = $("#results ul");
+        $list.html("");
+        for(var i=0; i<nearest.length; i++) {
+          var c = nearest[i][0];
+
+          var $box = $("<div>")
+            .css('background', c.hex)
+            .css('display', 'inline-block')
+            .css('margin-right', '10px')
+            .height('30px')
+            .width('30px');
+          var $line = $("<li>").append($box).append(c.title);
+          $list.append($line);
+        }
+      }
+
+      $(function(){
+        for(var i=0; i<colors.length; i++) {
+          var color = new tinycolor(colors[i].hex).toRgb();
+          colors[i].red = color.r;
+          colors[i].green = color.g;
+          colors[i].blue = color.b;
+        }
+        tree = new kdTree(colors, colorDistance, ["red", "green", "blue"]);
+
+        $("#picker").spectrum({
+          flat: true,
+          showInput: true,
+          preferredFormat: "hex",
+          move: update
+        });
+      });
+    </script>
+  </body>
+</html>
