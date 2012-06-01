@@ -38,3 +38,8 @@ var nearest = tree.nearest({ x: 5, y: 5 }, 2);
 
 console.log(nearest);
 ```
+
+## About
+
+Developed at [Ubilabs](http://ubilabs.net).
+
