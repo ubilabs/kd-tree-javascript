@@ -8,11 +8,15 @@
   </head>
   <body>
     <canvas id="canvas" width=500 height=500></canvas>
-    <input id="add" type="submit" value="Add point"/>
+    <br />
+    <input id="add" type="submit" value="Add a point"/>
+    <input id="remove" type="submit" value="Remove a point">
+    <input id="rebuild" type="submit" value="Rebuild tree">
     <script src="../jquery-1.7.2.min.js"></script>
     <script src="../kdTree.min.js"></script>
     <script>
       var tree, canvas, ctx;
+      var points = [];
 
       function distance(a, b) {
         var dx = a.x - b.x;
@@ -28,9 +32,9 @@
           if(node == null) return;
 
           ctx.beginPath();
-          ctx.fillStyle = "#f00";
+          ctx.fillStyle = "#00f";
           ctx.beginPath();
-          ctx.arc(node.obj.x, node.obj.y, 10, 0, Math.PI*2);
+          ctx.arc(node.obj.x, node.obj.y, 5, 0, Math.PI*2);
           ctx.closePath();
           ctx.fill();
 
@@ -57,7 +61,7 @@
           ctx.closePath();
           ctx.stroke();
 
-          ctx.fillStyle = "rgba(255,0,0,0.1)";
+          ctx.fillStyle = "rgba(255,0,0,0.2)";
           ctx.fillRect(bounds[0][0], bounds[1][0], bounds[0][1]-bounds[0][0], bounds[1][1]-bounds[1][0]);
 
           render(node.left, leftBounds);
@@ -76,7 +80,20 @@
             x: Math.random()*canvas.width,
             y: Math.random()*canvas.height
           };
+          points.push(point);
           tree.insert(point);
+          renderTree();
+        });
+
+        $("#remove").click(function(){
+          var removeIndex = Math.floor(Math.random()*points.length);
+          tree.remove(points[removeIndex]);
+          points.splice(removeIndex, 1);
+          renderTree();
+        });
+
+        $("#rebuild").click(function(){
+          tree = new kdTree(points, distance, ["x", "y"]);
           renderTree();
         });
       });
