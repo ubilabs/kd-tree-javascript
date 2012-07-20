@@ -9,12 +9,34 @@ In computer science, a [k-d tree](http://en.wikipedia.org/wiki/K-d_tree) (short 
 * [Spiders](http://ubilabs.github.com/kd-tree-javascript/examples/basic/) - animated multiple nearest neighbour search
 * [Google Map](http://ubilabs.github.com/kd-tree-javascript/examples/map/) - show nearest 20 out of 3000 markers on mouse move
 * [Colors](http://ubilabs.github.com/kd-tree-javascript/examples/colors/) - search color names based on color space distance
+* [Mutable](http://ubilabs.github.com/kd-tree-javascript/examples/mutable/) - dynamically add and remove nodes
 
 ### Usage
 
 ```js
+// Create a new tree from a list of points, a distance function, and a
+// list of dimensions.
 var tree = new kdTree(points, distance, dimensions);
+
+// Query the nearest *count* neighbours to a point, with an optional
+// maximal search distance.
+// Result is an array with *count* elements.
+// Each element is an array with two components: the searched point and
+// the distance to it.
 tree.nearest(point, count, [maxDistance]);
+
+// Insert a new point into the tree. Must be consistent with previous
+// contents.
+tree.insert(point);
+
+// Remove a point from the tree by reference.
+tree.remove(point);
+
+// Get an approximation of how unbalanced the tree is.
+// The higher this number, the worse query performance will be.
+// It indicates how many times worse it is than the optimal tree.
+// Minimum is 1. Unreliable for small trees.
+tree.balanceFactor();
 ```
 
 ### Example
