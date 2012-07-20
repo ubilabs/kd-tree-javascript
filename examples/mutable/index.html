@@ -11,7 +11,8 @@
     <br />
     <input id="add" type="submit" value="Add a point"/>
     <input id="rebuild" type="submit" value="Rebuild tree">
-    <p> Click on a point to remove it </p>
+    <p>Click on a point to remove it</p>
+    <p>Balance factor: <span id="factor">1</span></p>
     <script src="../jquery-1.7.2.min.js"></script>
     <script src="../kdTree.min.js"></script>
     <script>
@@ -27,6 +28,7 @@
       function renderTree() {
         ctx.clearRect(0,0,canvas.width, canvas.height);
         render(tree.root, [[0, canvas.width], [0, canvas.height]]);
+        $("#factor").text(tree.balanceFactor());
 
         function render(node, bounds) {
           if(node == null) return;
