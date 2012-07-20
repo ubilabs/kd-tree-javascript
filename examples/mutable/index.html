@@ -10,8 +10,8 @@
     <canvas id="canvas" width=500 height=500></canvas>
     <br />
     <input id="add" type="submit" value="Add a point"/>
-    <input id="remove" type="submit" value="Remove a point">
     <input id="rebuild" type="submit" value="Rebuild tree">
+    <p> Click on a point to remove it </p>
     <script src="../jquery-1.7.2.min.js"></script>
     <script src="../kdTree.min.js"></script>
     <script>
@@ -85,15 +85,15 @@
           renderTree();
         });
 
-        $("#remove").click(function(){
-          var removeIndex = Math.floor(Math.random()*points.length);
-          tree.remove(points[removeIndex]);
-          points.splice(removeIndex, 1);
+        $("#rebuild").click(function(){
+          tree = new kdTree(points, distance, ["x", "y"]);
           renderTree();
         });
 
-        $("#rebuild").click(function(){
-          tree = new kdTree(points, distance, ["x", "y"]);
+        $("#canvas").click(function(e){
+          var point = tree.nearest({x: e.offsetX, y: e.offsetY}, 1)[0][0];
+          points.splice(points.indexOf(point), 1);
+          tree.remove(point);
           renderTree();
         });
       });
