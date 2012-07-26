@@ -63,4 +63,4 @@ console.log(nearest);
 ## About
 
 Developed at [Ubilabs](http://ubilabs.net).
-
+Released under the MIT Licence.
