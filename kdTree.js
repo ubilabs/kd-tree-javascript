@@ -1,3 +1,14 @@
+/**
+ * k-d Tree JavaScript - V 1.0
+ *
+ * https://github.com/ubilabs/kd-tree-javascript
+ *
+ * @author Mircea Pricop <pricop@ubilabs.net>, 2012
+ * @author Martin Kleppe <kleppe@ubilabs.net>, 2012
+ * @author Ubilabs http://ubilabs.net, 2012
+ * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
+ */
+
 (function(){
   
   function Node(obj, dimension, parent) {
