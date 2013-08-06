@@ -47,7 +47,39 @@
       return node;
     }
 
-    this.root = buildTree(points, 0, null);
+    // Reloads a serialied tree
+    function loadTree (data) {
+      // Just need to restore the `parent` parameter
+      self.root = data;
+
+      function restoreParent (root) {
+        if (root.left) {
+          root.left.parent = root;
+          restoreParent(root.left);
+        }
+
+        if (root.right) {
+          root.right.parent = root;
+          restoreParent(root.right);
+        }
+      }
+
+      restoreParent(self.root);
+    }
+    
+    // If points is not an array, assume we're loading a pre-built tree
+    if (!Array.isArray(points)) loadTree(points, metric, dimensions);
+    else this.root = buildTree(points, 0, null);
+
+    // Convert to a JSON serializable structure; this just requires removing 
+    // the `parent` property
+    this.toJSON = function (src) {
+      if (!src) src = this.root;
+      var dest = new Node(src.obj, src.dimension, null);
+      if (src.left) dest.left = self.toJSON(src.left);
+      if (src.right) dest.right = self.toJSON(src.right);
+      return dest;
+    };
 
     this.insert = function (point) {
       function innerSearch(node, parent) {
