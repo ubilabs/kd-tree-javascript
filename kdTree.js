@@ -327,7 +327,7 @@
       result = [];
 
       for (i = 0; i < maxNodes; i += 1) {
-        if (bestNodes.content[i][0]) {
+        if (bestNodes.content[i]) {
           result.push([bestNodes.content[i][0].obj, bestNodes.content[i][1]]);
         }
       }
