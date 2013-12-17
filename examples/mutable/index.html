@@ -93,7 +93,11 @@
         });
 
         $("#canvas").click(function(e){
-          var point = tree.nearest({x: e.offsetX, y: e.offsetY}, 1)[0][0];
+          var offset = $(e.target).offset(),
+            offsetX = (e.offsetX || e.clientX - offset.left),
+            offsetY = (e.offsetY || e.clientY - offset.top);
+
+          var point = tree.nearest({x: offsetX, y: offsetY}, 1)[0][0];
           points.splice(points.indexOf(point), 1);
           tree.remove(point);
           renderTree();
