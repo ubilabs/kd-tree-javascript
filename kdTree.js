@@ -22,6 +22,18 @@
   function kdTree(points, metric, dimensions) {
 
     var self = this;
+
+    var dimensionsCompare = [];
+
+    for (var i = 0, l = dimensions.length; i < l; ++i) {
+      var key = dimensions[i];
+
+      // Create a function with direct access to properties
+      // faster : http://jsperf.com/sort-comparaison-function
+      var compare = Function("a", "b", "return (a."+key+" > b."+key+" ? 1 : - 1)|0");
+
+      dimensionsCompare.push(compare);
+    }
     
     function buildTree(points, depth, parent) {
       var dim = depth % dimensions.length,
@@ -35,9 +47,7 @@
         return new Node(points[0], dim, parent);
       }
 
-      points.sort(function (a, b) {
-        return a[dimensions[dim]] - b[dimensions[dim]];
-      });
+      points.sort(dimensionsCompare[dim]);
 
       median = Math.floor(points.length / 2);
       node = new Node(points[median], dim, parent);
