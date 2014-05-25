@@ -1,5 +1,5 @@
 /**
- * k-d Tree JavaScript - V 1.0
+ * k-d Tree JavaScript - V 1.01
  *
  * https://github.com/ubilabs/kd-tree-javascript
  *
@@ -9,8 +9,15 @@
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  */
 
-(function(){
-  
+ (function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports === 'object') {
+        factory(exports);
+    } else {
+        factory((root.commonJsStrict = {}));
+    }
+}(this, function (exports) {
   function Node(obj, dimension, parent) {
     this.obj = obj;
     this.left = null;
@@ -478,11 +485,9 @@
       }
     }
   };
-
+  
   this.kdTree = kdTree;
-
-  if (typeof exports !== 'undefined') {
-    exports.kdTree = kdTree;
-    exports.BinaryHeap = BinaryHeap;
-  }
-})();
+  
+  exports.kdTree = kdTree;
+  exports.BinaryHeap = BinaryHeap;
+}));
