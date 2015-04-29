@@ -148,40 +148,6 @@
           nextObj,
           pDimension;
 
-        function findMax(node, dim) {
-          var dimension,
-            own,
-            left,
-            right,
-            max;
-
-          if (node === null) {
-            return null;
-          }
-
-          dimension = dimensions[dim];
-          if (node.dimension === dim) {
-            if (node.right !== null) {
-              return findMax(node.right, dim);
-            }
-            return node;
-          }
-
-          own = node.obj[dimension];
-          left = findMax(node.left, dim);
-          right = findMax(node.right, dim);
-          max = node;
-
-          if (left !== null && left.obj[dimension] > own) {
-            max = left;
-          }
-
-          if (right !== null && right.obj[dimension] > max.obj[dimension]) {
-            max = right;
-          }
-          return max;
-        }
-
         function findMin(node, dim) {
           var dimension,
             own,
@@ -232,15 +198,22 @@
           return;
         }
 
-        if (node.left !== null) {
-          nextNode = findMax(node.left, node.dimension);
-        } else {
+        // If the right subtree is not empty, swap with the minimum element on the
+        // node's dimension. If it is empty, we swap the left and right subtrees and
+        // do the same.
+        if (node.right !== null) {
           nextNode = findMin(node.right, node.dimension);
+          nextObj = nextNode.obj;
+          removeNode(nextNode);          
+          node.obj = nextObj;
+        } else {
+          nextNode = findMin(node.left, node.dimension);
+          nextObj = nextNode.obj;
+          removeNode(nextNode);
+          node.right = node.left;
+          node.left = null;
+          node.obj = nextObj;
         }
-
-        nextObj = nextNode.obj;
-        removeNode(nextNode);
-        node.obj = nextObj;
 
       }
 
