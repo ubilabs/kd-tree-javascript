@@ -302,7 +302,8 @@
         }
       }
 
-      nearestSearch(self.root);
+      if(self.root)
+        nearestSearch(self.root);
 
       result = [];
 
