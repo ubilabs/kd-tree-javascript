@@ -1,10 +1,10 @@
 {
   "name": "kd-tree-javascript",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/greenSnot/kd-tree-javascript.git"
+    "url": "https://github.com/ubilabs/kd-tree-javascript.git"
   },
   "dependencies": {
   },
