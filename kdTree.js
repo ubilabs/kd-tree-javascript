@@ -15,7 +15,7 @@
     } else if (typeof exports === 'object') {
         factory(exports);
     } else {
-        factory((root.commonJsStrict = {}));
+        factory(root);
     }
 }(this, function (exports) {
   function Node(obj, dimension, parent) {
@@ -29,7 +29,7 @@
   function kdTree(points, metric, dimensions) {
 
     var self = this;
-    
+
     function buildTree(points, depth, parent) {
       var dim = depth % dimensions.length,
         median,
@@ -73,12 +73,12 @@
 
       restoreParent(self.root);
     }
-    
+
     // If points is not an array, assume we're loading a pre-built tree
     if (!Array.isArray(points)) loadTree(points, metric, dimensions);
     else this.root = buildTree(points, 0, null);
 
-    // Convert to a JSON serializable structure; this just requires removing 
+    // Convert to a JSON serializable structure; this just requires removing
     // the `parent` property
     this.toJSON = function (src) {
       if (!src) src = this.root;
@@ -204,7 +204,7 @@
         if (node.right !== null) {
           nextNode = findMin(node.right, node.dimension);
           nextObj = nextNode.obj;
-          removeNode(nextNode);          
+          removeNode(nextNode);
           node.obj = nextObj;
         } else {
           nextNode = findMin(node.left, node.dimension);
@@ -459,9 +459,7 @@
       }
     }
   };
-  
-  this.kdTree = kdTree;
-  
+
   exports.kdTree = kdTree;
   exports.BinaryHeap = BinaryHeap;
 }));
