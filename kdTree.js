@@ -9,52 +9,184 @@
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  */
 
- (function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        define(['exports'], factory);
-    } else if (typeof exports === 'object') {
-        factory(exports);
-    } else {
-        factory(root);
-    }
+/*
+function assert(condition, message) {
+	if (condition) {
+		return;
+	}
+	message = message || "Assertion failed";
+	if (typeof Error !== "undefined") {
+		throw new Error(message);
+	}
+	throw message; // Fallback
+}*/
+
+function swap(points, i,j) {
+	const t = points[i];
+	points[i] = points[j];
+	points[j] = t;
+}
+
+// left is always included, right is always excluded,
+// so the range [left,right) contains (right-left) elements.
+function partition(points, left, right, pivIdx, dim) {
+	// Partition around the value found at position pivIdx.
+	const pivot = points[pivIdx][dim]; // get pivot value
+	var storeIdx = left; // variable to store the final position of the pivot value.
+	swap(points, pivIdx, right-1); // Move pivot to end
+	for (i=left; i < right-1; ++i) { // check all values but the last
+		if( points[i][dim] < pivot ) {
+			if( storeIdx < i )
+				swap(points, storeIdx, i); // this moves all values smaller that pivot to the left.
+			++storeIdx;
+		}
+	}
+	if( storeIdx < right-1 ) {
+		swap(points, storeIdx, right-1); // Move pivot to proper place
+	}
+	return storeIdx;
+}
+
+// assumes [left, right) is sorted and
+// finds position of first element >= val
+function lower_bound(points, left, right, val, dim) {
+	var count = right - left;
+	while( count > 0 ) {
+		let step = Math.floor(count / 2);
+		if( points[left+step][dim] < val ) {
+			left  += step+1;
+			count -= step+1;
+		}
+		else {
+			count = step;
+		}
+	}
+	return left;
+}
+
+// returns the *position* of a median
+function smallMedian(points, left, right, dim) {
+	if( right - left < 3 ) { // less than 3 elements
+		return left;
+	}
+	// at least 3 elements.
+	const p0 = points[left+0], p1 = points[left+1], p2 = points[left+2];
+	const v0 = p0[dim],        v1 = p1[dim],        v2 = p2[dim];
+	if( v0 <= v1 ) {
+		if( v2 < v1 ) {
+			if( v2 < v0 ) { // we want v2-v0-v1
+				points[left+0] = p2;
+				points[left+1] = p0;
+				points[left+2] = p1;
+			} else { // we want v0-v2-v1
+				points[left+1] = p2;
+				points[left+2] = p1;
+			}
+		}
+	} else { // v1 < v0
+		if( v2 < v1 ) {
+			points[left+0] = p2;
+			points[left+1] = p1;
+			points[left+2] = p0;
+		} else if( v2 < v0 ) {
+			points[left+0] = p1;
+			points[left+1] = p2;
+			points[left+2] = p0;
+		} else {
+			points[left+0] = p1;
+			points[left+1] = p0;
+		}
+	}
+	if( left + 3 == right ) { // exactly 3 elements
+		return left+1;
+	}
+	// insert remaining elements with insertion sort
+	for( r = left+3; r < right; ++r ) {
+		const pos = lower_bound(points, left, r, points[r][dim], dim); // binary search
+		if( pos < r ) {
+			const p = points[r];
+			for(j=r; j > pos; --j) {
+				points[j] = points[j-1];
+			}
+			points[pos] = p;
+		}
+	}
+	return Math.floor((left+right)/2);
+}
+
+function find_good_pivot_pos(points, left, right, dim) {
+	if( right <= left + 5 ) {
+		return smallMedian(points, left, right, dim);
+	}
+	var ipos = left;
+	for( i = left; i < right; i += 5 ) {
+		const subRight = Math.min(i+5, right);
+		const m = smallMedian(points, i, subRight, dim);
+		swap(points, m, ipos);
+		++ipos;
+	}
+	return select(points, left, ipos, Math.floor((left+ipos)/2), dim);
+}
+
+function select(points, left, right, nth, dim) {
+	while (true) {
+		if (left+1 == right) {
+			return left;
+		}
+		// `find_good_pivot_pos` uses median-of-medians-of-5 to find a good pivot position.
+		// But it turns out to be slower than the stupid choice in our tests.
+		// 1M 2D points in the basic example : 2.5 sec vs 4.5 sec.
+		let pivotIdx = Math.floor((left+right)/2);//find_good_pivot_pos(points, left, right, dim);
+		pivotIdx = partition(points, left, right, pivotIdx, dim);
+		if (nth == pivotIdx) {
+			return nth;
+		} else if (nth < pivotIdx) {
+			right = pivotIdx;
+		} else {
+			left = pivotIdx+1;
+		}
+	}
+}
+
+(function (root, factory) {
+	if (typeof define === 'function' && define.amd) {
+		define(['exports'], factory);
+	} else if (typeof exports === 'object') {
+		factory(exports);
+	} else {
+		factory(root);
+	}
 }(this, function (exports) {
-  function Node(obj, dimension, parent) {
-    this.obj = obj;
-    this.left = null;
-    this.right = null;
-    this.parent = parent;
-    this.dimension = dimension;
-  }
+	function Node(obj, dimIdx, parent) {
+		this.obj = obj;
+		this.left = null;
+		this.right = null;
+		this.parent = parent;
+		this.dimIdx = dimIdx;
+	}
 
-  function kdTree(points, metric, dimensions) {
+function kdTree(points, metric, dimensions) {
 
-    var self = this;
+	var self = this;
 
-    function buildTree(points, depth, parent) {
-      var dim = depth % dimensions.length,
-        median,
-        node;
+	function buildTree(left, right, depth, parent) {
+		const dimi = depth % dimensions.length;
+		const dim = dimensions[dimi];
+		if (left == right) {
+			return null;
+		}
+		if (left+1 == right) {
+			return new Node(points[left], dimi, parent);
+		}
+		const mid = Math.floor((left+right)/2);
+		select(points, left, right, mid, dim);
+		const node = new Node(points[mid], dimi, parent);
+		node.left = buildTree(left, mid, depth + 1, node);
+		node.right = buildTree(mid+1, right, depth + 1, node);
+		return node;
+	}
 
-      if (points.length === 0) {
-        return null;
-      }
-      if (points.length === 1) {
-        return new Node(points[0], dim, parent);
-      }
-
-      points.sort(function (a, b) {
-        return a[dimensions[dim]] - b[dimensions[dim]];
-      });
-
-      median = Math.floor(points.length / 2);
-      node = new Node(points[median], dim, parent);
-      node.left = buildTree(points.slice(0, median), depth + 1, node);
-      node.right = buildTree(points.slice(median + 1), depth + 1, node);
-
-      return node;
-    }
-
-    // Reloads a serialied tree
+    // Reloads a serialized tree
     function loadTree (data) {
       // Just need to restore the `parent` parameter
       self.root = data;
@@ -76,13 +208,13 @@
 
     // If points is not an array, assume we're loading a pre-built tree
     if (!Array.isArray(points)) loadTree(points, metric, dimensions);
-    else this.root = buildTree(points, 0, null);
+    else this.root = buildTree(0, points.length, 0, null);
 
     // Convert to a JSON serializable structure; this just requires removing
     // the `parent` property
     this.toJSON = function (src) {
       if (!src) src = this.root;
-      var dest = new Node(src.obj, src.dimension, null);
+      const dest = new Node(src.obj, src.dimIdx, null);
       if (src.left) dest.left = self.toJSON(src.left);
       if (src.right) dest.right = self.toJSON(src.right);
       return dest;
@@ -95,7 +227,7 @@
           return parent;
         }
 
-        var dimension = dimensions[node.dimension];
+        const dimension = dimensions[node.dimIdx];
         if (point[dimension] < node.obj[dimension]) {
           return innerSearch(node.left, node);
         } else {
@@ -103,17 +235,15 @@
         }
       }
 
-      var insertPosition = innerSearch(this.root, null),
-        newNode,
-        dimension;
+      const insertPosition = innerSearch(this.root, null);
 
       if (insertPosition === null) {
         this.root = new Node(point, 0, null);
         return;
       }
 
-      newNode = new Node(point, (insertPosition.dimension + 1) % dimensions.length, insertPosition);
-      dimension = dimensions[insertPosition.dimension];
+      const newNode = new Node(point, (insertPosition.dimIdx + 1) % dimensions.length, insertPosition);
+      const dimension = dimensions[insertPosition.dimIdx];
 
       if (point[dimension] < insertPosition.obj[dimension]) {
         insertPosition.left = newNode;
@@ -134,7 +264,7 @@
           return node;
         }
 
-        var dimension = dimensions[node.dimension];
+        const dimension = dimensions[node.dimIdx];
 
         if (point[dimension] < node.obj[dimension]) {
           return nodeSearch(node.left, node);
@@ -161,7 +291,7 @@
 
           dimension = dimensions[dim];
 
-          if (node.dimension === dim) {
+          if (node.dimIdx === dim) {
             if (node.left !== null) {
               return findMin(node.left, dim);
             }
@@ -188,7 +318,7 @@
             return;
           }
 
-          pDimension = dimensions[node.parent.dimension];
+          pDimension = dimensions[node.parent.dimIdx];
 
           if (node.obj[pDimension] < node.parent.obj[pDimension]) {
             node.parent.left = null;
@@ -202,12 +332,12 @@
         // node's dimension. If it is empty, we swap the left and right subtrees and
         // do the same.
         if (node.right !== null) {
-          nextNode = findMin(node.right, node.dimension);
+          nextNode = findMin(node.right, node.dimIdx);
           nextObj = nextNode.obj;
           removeNode(nextNode);
           node.obj = nextObj;
         } else {
-          nextNode = findMin(node.left, node.dimension);
+          nextNode = findMin(node.left, node.dimIdx);
           nextObj = nextNode.obj;
           removeNode(nextNode);
           node.right = node.left;
@@ -224,7 +354,7 @@
       removeNode(node);
     };
 
-    this.nearest = function (point, maxNodes, maxDistance) {
+    this.nearest = function (query, maxNodes, maxDistance) {
       var i,
         result,
         bestNodes;
@@ -233,15 +363,6 @@
         function (e) { return -e[1]; }
       );
 
-      function nearestSearch(node) {
-        var bestChild,
-          dimension = dimensions[node.dimension],
-          ownDistance = metric(point, node.obj),
-          linearPoint = {},
-          linearDistance,
-          otherChild,
-          i;
-
         function saveNode(node, distance) {
           bestNodes.push([node, distance]);
           if (bestNodes.size() > maxNodes) {
@@ -249,15 +370,17 @@
           }
         }
 
-        for (i = 0; i < dimensions.length; i += 1) {
-          if (i === node.dimension) {
-            linearPoint[dimensions[i]] = point[dimensions[i]];
-          } else {
-            linearPoint[dimensions[i]] = node.obj[dimensions[i]];
-          }
-        }
+      function nearestSearch(node) {
+        var bestChild, otherChild, i;
+        const curdim = dimensions[node.dimIdx];
+        const ownDistance = metric(query, node.obj);
 
-        linearDistance = metric(linearPoint, node.obj);
+		 var orthogonalPoint = {}
+		 for(d =0; d < dimensions.length; ++d) {
+			 orthogonalPoint[dimensions[d]] = node.obj[dimensions[d]];
+		 }
+		 orthogonalPoint[curdim] = query[curdim];
+		 const orthogonalDistance = metric(orthogonalPoint, node.obj);
 
         if (node.right === null && node.left === null) {
           if (bestNodes.size() < maxNodes || ownDistance < bestNodes.peek()[1]) {
@@ -271,7 +394,7 @@
         } else if (node.left === null) {
           bestChild = node.right;
         } else {
-          if (point[dimension] < node.obj[dimension]) {
+          if (query[curdim] < node.obj[curdim]) {
             bestChild = node.left;
           } else {
             bestChild = node.right;
@@ -284,7 +407,7 @@
           saveNode(node, ownDistance);
         }
 
-        if (bestNodes.size() < maxNodes || Math.abs(linearDistance) < bestNodes.peek()[1]) {
+        if (bestNodes.size() < maxNodes || Math.abs(orthogonalDistance) < bestNodes.peek()[1]) {
           if (bestChild === node.left) {
             otherChild = node.right;
           } else {
@@ -333,6 +456,126 @@
       return height(self.root) / (Math.log(count(self.root)) / Math.log(2));
     };
   }
+
+	/* Now a static version of the Kd-tree, that only shuffles the input array.
+	 * No extra node hierarchy is built.
+	 * It does not seem to be faster, but it uses less memory.
+	 */
+
+function staticKdTree(points, metric, dimensions) {
+
+	var self = this;
+
+	function getNodeIndex(node) {
+		return Math.floor((node[0]+node[1])/2);
+	}
+
+	function buildTree(left, right, depth) {
+		if (left+1 >= right) {
+			return;
+		}
+		const dim = dimensions[depth % dimensions.length];
+		const mid = getNodeIndex([left, right]);
+		select(self.points, left, right, mid, dim);
+		buildTree(left, mid, depth + 1);
+		buildTree(mid+1, right, depth + 1);
+	}
+
+	this.points = points;//.slice();
+	this.root = buildTree(0, self.points.length, 0);
+
+	this.nearest = function (query, maxNodes, maxDistance) {
+		var i, result, bestNodes;
+
+		bestNodes = new BinaryHeap(
+			function (e) { return -e[1]; }
+		);
+
+		function saveNode(node, distance) {
+			bestNodes.push([node, distance]);
+			if (bestNodes.size() > maxNodes) {
+				bestNodes.pop();
+			}
+		}
+
+		function nearestSearch(bounds, depth) {
+			const nodeIdx = getNodeIndex(bounds);
+			const nodePt = self.points[nodeIdx];
+			const dimi = depth % dimensions.length;
+			const curdim = dimensions[dimi];
+			var bestChild, otherChild, i;
+			const ownDistance = metric(query, nodePt);
+
+			var orthogonalPoint = {}
+			for(d =0; d < dimensions.length; ++d) {
+				orthogonalPoint[dimensions[d]] = nodePt[dimensions[d]];
+			}
+			orthogonalPoint[curdim] = query[curdim];
+			const orthogonalDistance = metric(orthogonalPoint, nodePt);
+
+			const [left, right] = bounds;
+			const nbElem = right - left;
+
+			if( nbElem == 1 ) {
+				if (bestNodes.size() < maxNodes || ownDistance < bestNodes.peek()[1]) {
+					saveNode(bounds, ownDistance);
+				}
+				return;
+			}
+
+			const leftChild = [left, nodeIdx];
+			const rightChild = [nodeIdx+1, right];
+
+			if( rightChild[0] == rightChild[1] ) { // right child is empty
+				bestChild = leftChild;
+				otherChild = rightChild;
+			} else if( leftChild[0] == leftChild[1] ) { // left child is empty
+				bestChild = rightChild;
+				otherChild = leftChild;
+			} else { // both children are NOT empty
+				if (query[curdim] < nodePt[curdim]) {
+					bestChild = leftChild;
+					otherChild = rightChild;
+				} else {
+					bestChild = rightChild;
+					otherChild = leftChild;
+				}
+			}
+
+			nearestSearch(bestChild, depth+1);
+
+			if (bestNodes.size() < maxNodes || ownDistance < bestNodes.peek()[1]) {
+				saveNode(bounds, ownDistance);
+			}
+
+			if (bestNodes.size() < maxNodes || Math.abs(orthogonalDistance) < bestNodes.peek()[1]) {
+				if (otherChild[0] < otherChild[1]) { // if otherChild is NOT empty
+					nearestSearch(otherChild, depth+1);
+				}
+			}
+		}
+
+		if (maxDistance) {
+			for (i = 0; i < maxNodes; i += 1) {
+				bestNodes.push([null, maxDistance]);
+			}
+		}
+
+		if(self.points.length > 0)
+			nearestSearch([0, points.length], 0);
+
+		result = [];
+
+		for (i = 0; i < Math.min(maxNodes, bestNodes.content.length); i += 1) {
+			bounds = bestNodes.content[i][0];
+			if( bounds != null ) {
+				result.push([self.points[getNodeIndex(bounds)], bestNodes.content[i][1]]);
+			}
+		}
+		return result;
+	};
+
+}
 
   // Binary heap implementation from:
   // http://eloquentjavascript.net/appendix2.html
@@ -461,5 +704,6 @@
   };
 
   exports.kdTree = kdTree;
+  exports.staticKdTree = staticKdTree;
   exports.BinaryHeap = BinaryHeap;
 }));
