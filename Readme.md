@@ -8,10 +8,10 @@ In computer science, a [k-d tree](http://en.wikipedia.org/wiki/K-d_tree) (short 
 
 ### Demos
 
-* [Spiders](http://ubilabs.github.com/kd-tree-javascript/examples/basic/) - animated multiple nearest neighbour search
-* [Google Map](http://ubilabs.github.com/kd-tree-javascript/examples/map/) - show nearest 20 out of 3000 markers on mouse move
-* [Colors](http://ubilabs.github.com/kd-tree-javascript/examples/colors/) - search color names based on color space distance
-* [Mutable](http://ubilabs.github.com/kd-tree-javascript/examples/mutable/) - dynamically add and remove nodes
+* [Spiders](http://ubilabs.github.io/kd-tree-javascript/examples/basic/) - animated multiple nearest neighbour search
+* [Google Map](http://ubilabs.github.io/kd-tree-javascript/examples/map/) - show nearest 20 out of 3000 markers on mouse move
+* [Colors](http://ubilabs.github.io/kd-tree-javascript/examples/colors/) - search color names based on color space distance
+* [Mutable](http://ubilabs.github.io/kd-tree-javascript/examples/mutable/) - dynamically add and remove nodes
 
 ### Usage
 
