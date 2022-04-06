@@ -12,5 +12,5 @@
   "main": "./kdTree-min.js",
   "scripts": {},
   "author": "",
-  "license": "UNLICENSED"
+  "license": "MIT"
 }
