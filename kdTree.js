@@ -9,14 +9,14 @@
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  */
 
- (function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        define(['exports'], factory);
-    } else if (typeof exports === 'object') {
-        factory(exports);
-    } else {
-        factory(root);
-    }
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(['exports'], factory);
+  } else if (typeof exports === 'object') {
+    factory(exports);
+  } else {
+    factory(root);
+  }
 }(this, function (exports) {
   function Node(obj, dimension, parent) {
     this.obj = obj;
@@ -47,6 +47,17 @@
       });
 
       median = Math.floor(points.length / 2);
+
+      // avoid having same coords on left and right tree !!!
+      while (median > 0) {
+        let newmedian = median - 1;
+        if (points[median][dimensions[dim]] === points[newmedian][dimensions[dim]]) {
+          median -= 1;
+        } else {
+          break;
+        }
+      }
+
       node = new Node(points[median], dim, parent);
       node.left = buildTree(points.slice(0, median), depth + 1, node);
       node.right = buildTree(points.slice(median + 1), depth + 1, node);
@@ -55,11 +66,11 @@
     }
 
     // Reloads a serialied tree
-    function loadTree (data) {
+    function loadTree(data) {
       // Just need to restore the `parent` parameter
       self.root = data;
 
-      function restoreParent (root) {
+      function restoreParent(root) {
         if (root.left) {
           root.left.parent = root;
           restoreParent(root.left);
@@ -74,6 +85,7 @@
       restoreParent(self.root);
     }
 
+    // console.warn('using mariosgit:kd-tree v1.0.4');
     // If points is not an array, assume we're loading a pre-built tree
     if (!Array.isArray(points)) loadTree(points, metric, dimensions);
     else this.root = buildTree(points, 0, null);
@@ -87,6 +99,23 @@
       if (src.right) dest.right = self.toJSON(src.right);
       return dest;
     };
+
+    /** returns a list of points in the subtree, exclusive the given node ! */
+    this.toArray = function (src) {
+      let result = [];
+      if (src === null) {
+        return result;
+      }
+      if (src.left) {
+        result.push(src.left.obj);
+        result = [...result, ...this.toArray(src.left)];
+      }
+      if (src.right) {
+        result.push(src.right.obj);
+        result = [...result, ...this.toArray(src.right)];
+      }
+      return result;
+    }
 
     this.insert = function (point) {
       function innerSearch(node, parent) {
@@ -137,9 +166,9 @@
         var dimension = dimensions[node.dimension];
 
         if (point[dimension] < node.obj[dimension]) {
-          return nodeSearch(node.left, node);
+          return nodeSearch(node.left);
         } else {
-          return nodeSearch(node.right, node);
+          return nodeSearch(node.right);
         }
       }
 
@@ -214,14 +243,30 @@
           node.left = null;
           node.obj = nextObj;
         }
-
       }
 
       node = nodeSearch(self.root);
 
-      if (node === null) { return; }
+      if (node === null) {
+        console.warn('kdtree:remove could not remove node ! internal error !');
+        return;
+      }
 
-      removeNode(node);
+      // removeNode(node); // buggi
+
+      // wikipedia says: just rebuild the subtree
+      const allchilds = this.toArray(node);
+      let newnode = buildTree(allchilds, node.dimension, node.parent);
+      if (node.parent) {
+        if (node.parent.left === node) {
+          node.parent.left = newnode;
+        } else if (node.parent.right === node) {
+          node.parent.right = newnode;
+        }
+      } else {
+        self.root = newnode;
+      }
+
     };
 
     this.nearest = function (point, maxNodes, maxDistance) {
@@ -302,7 +347,7 @@
         }
       }
 
-      if(self.root)
+      if (self.root)
         nearestSearch(self.root);
 
       result = [];
@@ -337,20 +382,20 @@
   // Binary heap implementation from:
   // http://eloquentjavascript.net/appendix2.html
 
-  function BinaryHeap(scoreFunction){
+  function BinaryHeap(scoreFunction) {
     this.content = [];
     this.scoreFunction = scoreFunction;
   }
 
   BinaryHeap.prototype = {
-    push: function(element) {
+    push: function (element) {
       // Add the new element to the end of the array.
       this.content.push(element);
       // Allow it to bubble up.
       this.bubbleUp(this.content.length - 1);
     },
 
-    pop: function() {
+    pop: function () {
       // Store the first element so we can return it later.
       var result = this.content[0];
       // Get the element at the end of the array.
@@ -364,11 +409,11 @@
       return result;
     },
 
-    peek: function() {
+    peek: function () {
       return this.content[0];
     },
 
-    remove: function(node) {
+    remove: function (node) {
       var len = this.content.length;
       // To remove a value, we must search through the array to find
       // it.
@@ -390,18 +435,18 @@
       throw new Error("Node not found.");
     },
 
-    size: function() {
+    size: function () {
       return this.content.length;
     },
 
-    bubbleUp: function(n) {
+    bubbleUp: function (n) {
       // Fetch the element that has to be moved.
       var element = this.content[n];
       // When at 0, an element can not go up any further.
       while (n > 0) {
         // Compute the parent element's index, and fetch it.
         var parentN = Math.floor((n + 1) / 2) - 1,
-            parent = this.content[parentN];
+          parent = this.content[parentN];
         // Swap the elements if the parent is greater.
         if (this.scoreFunction(element) < this.scoreFunction(parent)) {
           this.content[parentN] = element;
@@ -416,13 +461,13 @@
       }
     },
 
-    sinkDown: function(n) {
+    sinkDown: function (n) {
       // Look up the target element and its score.
       var length = this.content.length,
-          element = this.content[n],
-          elemScore = this.scoreFunction(element);
+        element = this.content[n],
+        elemScore = this.scoreFunction(element);
 
-      while(true) {
+      while (true) {
         // Compute the indices of the child elements.
         var child2N = (n + 1) * 2, child1N = child2N - 1;
         // This is used to store the new position of the element,
@@ -432,7 +477,7 @@
         if (child1N < length) {
           // Look it up and compute its score.
           var child1 = this.content[child1N],
-              child1Score = this.scoreFunction(child1);
+            child1Score = this.scoreFunction(child1);
           // If the score is less than our element's, we need to swap.
           if (child1Score < elemScore)
             swap = child1N;
@@ -440,8 +485,8 @@
         // Do the same checks for the other child.
         if (child2N < length) {
           var child2 = this.content[child2N],
-              child2Score = this.scoreFunction(child2);
-          if (child2Score < (swap == null ? elemScore : child1Score)){
+            child2Score = this.scoreFunction(child2);
+          if (child2Score < (swap == null ? elemScore : child1Score)) {
             swap = child2N;
           }
         }
