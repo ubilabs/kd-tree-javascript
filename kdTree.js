@@ -296,7 +296,7 @@
         }
       }
 
-      if (maxDistance) {
+      if (maxDistance != null) {
         for (i = 0; i < maxNodes; i += 1) {
           bestNodes.push([null, maxDistance]);
         }
