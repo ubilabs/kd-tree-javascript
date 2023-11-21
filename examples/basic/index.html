@@ -138,7 +138,8 @@
         }
         neighbors = $("#neighbors").val();
         useTree = $("#useTree").attr('checked') ? true : false;
-        tree = new kdTree(points, distance, ["x", "y"]);
+        tree = new staticKdTree(points, distance, ["x", "y"]);
+        //tree = new kdTree(points, distance, ["x", "y"]);
       }
 
       $(function(){

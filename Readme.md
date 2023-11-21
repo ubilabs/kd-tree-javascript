@@ -16,7 +16,7 @@ In computer science, a [k-d tree](http://en.wikipedia.org/wiki/K-d_tree) (short 
 ### Usage
 
 #### Using global exports
-When you include the kd-tree script via HTML, the global variables *kdTree* and *BinaryHeap* will be exported.
+When you include the kd-tree script via HTML, the global variables `kdTree`, `staticKdTree` and `BinaryHeap` will be exported.
 
 ```js
 // Create a new tree from a list of points, a distance function, and a
@@ -43,6 +43,10 @@ tree.remove(point);
 // Minimum is 1. Unreliable for small trees.
 tree.balanceFactor();
 ```
+
+The `staticKdTree` only shuffle the point array in place and does not build a separate hierarchy of nodes.
+So it only proposes to build a tree from an array of points together with the *nearest* method.
+Its advantage is that it does no memory allocation.
 
 #### Using RequireJS
 ```js
@@ -87,7 +91,7 @@ var distance = function(a, b){
   return Math.pow(a.x - b.x, 2) +  Math.pow(a.y - b.y, 2);
 }
 
-var tree = new kdTree(points, distance, ["x", "y"]);
+var tree = new staticKdTree(points, distance, ["x", "y"]);
 
 var nearest = tree.nearest({ x: 5, y: 5 }, 2);
 

@@ -8,11 +8,9 @@
   },
   "dependencies": {
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "main": "./kdTree-min.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "",
   "license": "MIT"
 }
