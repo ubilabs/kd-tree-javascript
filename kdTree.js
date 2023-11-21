@@ -34,7 +34,7 @@ function partition(points, left, right, pivIdx, dim) {
 	const pivot = points[pivIdx][dim]; // get pivot value
 	var storeIdx = left; // variable to store the final position of the pivot value.
 	swap(points, pivIdx, right-1); // Move pivot to end
-	for (i=left; i < right-1; ++i) { // check all values but the last
+	for (let i=left; i < right-1; ++i) { // check all values but the last
 		if( points[i][dim] < pivot ) {
 			if( storeIdx < i )
 				swap(points, storeIdx, i); // this moves all values smaller that pivot to the left.
@@ -101,11 +101,11 @@ function smallMedian(points, left, right, dim) {
 		return left+1;
 	}
 	// insert remaining elements with insertion sort
-	for( r = left+3; r < right; ++r ) {
+	for( let r = left+3; r < right; ++r ) {
 		const pos = lower_bound(points, left, r, points[r][dim], dim); // binary search
 		if( pos < r ) {
 			const p = points[r];
-			for(j=r; j > pos; --j) {
+			for( let j = r; j > pos; --j ) {
 				points[j] = points[j-1];
 			}
 			points[pos] = p;
@@ -119,7 +119,7 @@ function find_good_pivot_pos(points, left, right, dim) {
 		return smallMedian(points, left, right, dim);
 	}
 	var ipos = left;
-	for( i = left; i < right; i += 5 ) {
+	for( let i = left; i < right; i += 5 ) {
 		const subRight = Math.min(i+5, right);
 		const m = smallMedian(points, i, subRight, dim);
 		swap(points, m, ipos);
@@ -376,7 +376,7 @@ function kdTree(points, metric, dimensions) {
         const ownDistance = metric(query, node.obj);
 
 		 var orthogonalPoint = {}
-		 for(d =0; d < dimensions.length; ++d) {
+		 for( let d = 0; d < dimensions.length; ++d ) {
 			 orthogonalPoint[dimensions[d]] = node.obj[dimensions[d]];
 		 }
 		 orthogonalPoint[curdim] = query[curdim];
@@ -420,7 +420,7 @@ function kdTree(points, metric, dimensions) {
       }
 
       if (maxDistance) {
-        for (i = 0; i < maxNodes; i += 1) {
+        for (let i = 0; i < maxNodes; i += 1) {
           bestNodes.push([null, maxDistance]);
         }
       }
@@ -430,7 +430,7 @@ function kdTree(points, metric, dimensions) {
 
       result = [];
 
-      for (i = 0; i < Math.min(maxNodes, bestNodes.content.length); i += 1) {
+      for (let i = 0; i < Math.min(maxNodes, bestNodes.content.length); i += 1) {
         if (bestNodes.content[i][0]) {
           result.push([bestNodes.content[i][0].obj, bestNodes.content[i][1]]);
         }
@@ -507,7 +507,7 @@ function staticKdTree(points, metric, dimensions) {
 			const ownDistance = metric(query, nodePt);
 
 			var orthogonalPoint = {}
-			for(d =0; d < dimensions.length; ++d) {
+			for(let d =0; d < dimensions.length; ++d) {
 				orthogonalPoint[dimensions[d]] = nodePt[dimensions[d]];
 			}
 			orthogonalPoint[curdim] = query[curdim];
@@ -556,7 +556,7 @@ function staticKdTree(points, metric, dimensions) {
 		}
 
 		if (maxDistance) {
-			for (i = 0; i < maxNodes; i += 1) {
+			for (let i = 0; i < maxNodes; i += 1) {
 				bestNodes.push([null, maxDistance]);
 			}
 		}
@@ -566,7 +566,7 @@ function staticKdTree(points, metric, dimensions) {
 
 		result = [];
 
-		for (i = 0; i < Math.min(maxNodes, bestNodes.content.length); i += 1) {
+		for (let i = 0; i < Math.min(maxNodes, bestNodes.content.length); i += 1) {
 			bounds = bestNodes.content[i][0];
 			if( bounds != null ) {
 				result.push([self.points[getNodeIndex(bounds)], bestNodes.content[i][1]]);
@@ -615,7 +615,7 @@ function staticKdTree(points, metric, dimensions) {
       var len = this.content.length;
       // To remove a value, we must search through the array to find
       // it.
-      for (var i = 0; i < len; i++) {
+      for (let i = 0; i < len; i++) {
         if (this.content[i] == node) {
           // When it is found, the process seen in 'pop' is repeated
           // to fill up the hole.
